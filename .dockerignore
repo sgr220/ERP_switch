@@ -1,0 +1,12 @@
+**/.git
+**/.gitignore
+**/node_modules
+**/npm-debug.log
+**/.env
+**/dist
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+nginx/certbot/conf
+nginx/certbot/www
+*.md
+.claude
