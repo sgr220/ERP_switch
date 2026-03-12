@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Install dependencies first (better layer caching)
 COPY package*.json ./
-RUN npm ci --only=production
+RUN apk add --no-cache openssl && npm ci --only=production
 
 # Copy source code
 COPY . .

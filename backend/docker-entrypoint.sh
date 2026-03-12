@@ -2,7 +2,7 @@
 set -e
 
 echo "==> Running database migrations..."
-npx prisma migrate deploy
+npx prisma db push
 
 # Seed only if the database is empty (no users exist)
 echo "==> Checking if database needs seeding..."
