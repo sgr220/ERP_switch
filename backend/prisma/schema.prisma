@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("OPERATOR") // ADMIN, OPERATOR, SELLER
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  productionOrders ProductionOrder[]
+}
+
+model Product {
+  id         String   @id @default(cuid())
+  name       String
+  type       String   // CAMISETA, POLO, REGATA, etc.
+  reference  String   @unique
+  sizes      String   // JSON array stored as string: ["P","M","G","GG"]
+  colors     String   // JSON array stored as string: ["Branco","Preto"]
+  salePrice  Float
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  orderItems       OrderItem[]
+  productionOrders ProductionOrder[]
+}
+
+model Customer {
+  id                String   @id @default(cuid())
+  name              String
+  document          String?  // CPF or CNPJ
+  email             String?
+  phone             String?
+  paymentCondition  String?  // ex: "30/60/90 dias"
+  address           String?
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  orders Order[]
+}
+
+model Order {
+  id           String   @id @default(cuid())
+  customerId   String
+  customer     Customer @relation(fields: [customerId], references: [id])
+  status       String   @default("PENDING") // PENDING, CONFIRMED, IN_PRODUCTION, DELIVERED, CANCELLED
+  deliveryDate DateTime?
+  notes        String?
+  total        Float    @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  items            OrderItem[]
+  productionOrders ProductionOrder[]
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+  size        String
+  color       String
+  quantity    Int
+  unitPrice   Float
+
+  @@index([orderId])
+}
+
+model ProductionOrder {
+  id          String    @id @default(cuid())
+  orderId     String?
+  order       Order?    @relation(fields: [orderId], references: [id])
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id])
+  quantity    Int
+  size        String
+  color       String
+  status      String    @default("PENDING") // PENDING, IN_PRODUCTION, COMPLETED, CANCELLED
+  responsibleId String?
+  responsible   User?   @relation(fields: [responsibleId], references: [id])
+  deadline    DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model StockItem {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // MATERIA_PRIMA, PRODUTO_ACABADO
+  unit        String   // metros, unidades, kg, rolos
+  quantity    Float    @default(0)
+  minQuantity Float    @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  movements StockMovement[]
+}
+
+model StockMovement {
+  id          String    @id @default(cuid())
+  stockItemId String
+  stockItem   StockItem @relation(fields: [stockItemId], references: [id])
+  type        String    // IN, OUT
+  quantity    Float
+  reason      String?
+  createdAt   DateTime  @default(now())
+}
